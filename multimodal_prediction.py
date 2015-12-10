@@ -82,13 +82,3 @@ def errorComp(column, amount=20):
 if __name__ == '__main__':
 
     errorComp(5,200)
-
-
-
-
-
-
-
-
-
-
