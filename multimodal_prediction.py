@@ -23,7 +23,7 @@ for i in list(range(modalitiesArray.shape[0])):
             modalitiesArray[i,j] = colsum
 
 
-nnmf = dc.NMF(n_components=60)
+nnmf = dc.NMF(n_components=1)
 W = nnmf.fit_transform(modalitiesArray)
 H = nnmf.components_
 predictedMod = np.dot(W, H)
@@ -32,7 +32,7 @@ predictedMod = np.dot(W, H)
 
 #Testing
 
-testArray = modalitiesArray
+testArray = np.copy(modalitiesArray)
 testArray[-1,-21:-1] = testArray[-1,0:20].mean()
 
 # nnmfTest = dc.NMF(n_components=60)
@@ -72,6 +72,7 @@ def errorComp(column, amount=20):
     Htest = nnmfTest.components_
     predictedT = np.dot(Wtest,Htest)
     # Prints out the normalized RMSE for the test array
+    print('Error predicting {0}'.format(valueNamesArray[column]))
     print('Test:',normalizedRMSE(modalitiesArray[-amount-1:-1,column],predictedT[-amount-1:-1,column]))
     # Prints out the normalized RMSE for the original
     print('Original', normalizedRMSE(modalitiesArray[-amount-1:-1,column], predictedMod[-amount - 1:-1, column]))
@@ -81,4 +82,4 @@ def errorComp(column, amount=20):
 
 if __name__ == '__main__':
 
-    errorComp(5,200)
+    errorComp(6,200)
