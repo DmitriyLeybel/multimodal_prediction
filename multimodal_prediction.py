@@ -1,6 +1,7 @@
 from sklearn import decomposition as dc
 import numpy as np
 from sklearn.metrics import mean_squared_error as mse
+import pickle
 
 modalitiesArray = np.loadtxt('4m1.data')
 valueNamesArray = np.loadtxt('4m1.head', dtype=bytes)
