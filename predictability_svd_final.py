@@ -64,23 +64,31 @@ def createDictV2():
     # Merges all of the arrays in every dialogue dictionary entry into one
     for k in dataDict:
         dataDict[k][1] = np.row_stack((c for c in dataDict[k][1]))
-    # Fills in the averages of each dialogue data array
+    # Fills in the averages of each dialogue data array into the NaN spots
     for k in dataDict:
         imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
         dataDict[k][1] = imp.fit_transform(dataDict[k][1])
+    # Gets rid of the first two columns - dialogue and session
+    for k in dataDict:
+        dataDict[k][0] = dataDict[k][0][2:]
+        dataDict[k][1] = dataDict[k][1][:,2:]
     return dataDict
 
 
 def pickleArrays():
     # Run first to pickle the dictionary in order to not rebuild it every single time
+    print('Constructing dictionary')
     dataDict = createDictV2()
+    print('Dictionary constructed. Now, pickling dictionary.')
     with open('modDict','wb') as f:
         pickle.dump(dataDict,f)
+    print('Pickling complete')
 
 
 def pickleVectors():
     # # Populates a dictionary with vectors representing the truncated matrix with 1 feature
     # Accesses pickled dictionary and instantiates it
+    print('Pickling vectors')
     dataDict = pickle.load(open('modDict','rb'))
     # Pickles the vector dictionary
     vDict = {}
@@ -122,7 +130,8 @@ def multicompare(vector, data, line, number=20):
 
 def multiCompareV2(data, width=20, seedNum=0):
     print('Comparing a random portion of dialogue {data} with width {range} to the dialogue vectors \n'.format(data=data,
-                                                                                                            range = width),40*'*-')
+                                                                                                            range=width), 40*'*-')
+
     distances = []
     for v in vDict:
         np.random.seed(seedNum)
@@ -150,7 +159,6 @@ def predictV2(dialogue):
 
 if __name__ == '__main__':
     # pickleArrays()
+    # pickleVectors()
     dataDict, vDict = loadFiles()
-    multiCompareV2('6')
-    # multicompare('7', '8', 10, 20)
-    # print(predict('8m7',20))
+    multiCompareV2('1')
