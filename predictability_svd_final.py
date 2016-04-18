@@ -113,7 +113,8 @@ def compare(vector, data, line):
     print(pair.pairwise_distances(vector,data,'cosine'))
 
 
-def compareV2(vector, data, width=20):
+def compareV2(vector, data, width=20, seedNum=0):
+    np.random.seed(seedNum)
     vector = vDict[vector]
     dataSize = dataDict[data][1].shape[0]
     randomMid = np.random.random_integers(0,dataSize-1)
@@ -134,13 +135,11 @@ def multiCompareV2(data, width=20, seedNum=0):
 
     distances = []
     for v in vDict:
-        np.random.seed(seedNum)
-        distance = float(compareV2(v, data, width))
+        distance = float(compareV2(v, data, width, seedNum=seedNum))
         distances.append((v,distance))
         print('Dialogue {vector} distance: {distance} '.format(vector=v, distance=distance))
     minDist = max(distances,key= lambda x: x[1])
     print(44*'_','\n','Smallest distance {small} belongs to the dialogue {vector} vector'.format(small=minDist[1],vector=minDist[0]))
-
 
 
 # Outputs the closest dialogue and session and the cosine distance in a tuple
