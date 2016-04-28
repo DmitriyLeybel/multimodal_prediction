@@ -4,13 +4,14 @@ from sklearn.metrics import mean_squared_error as mse
 import os
 import pickle
 import sklearn.metrics.pairwise as pair
-from sklearn.preprocessing import Imputer
+from sklearn.preprocessing import Imputer, MinMaxScaler
 import re
+import matplotlib.pyplot as plt
 
 
-def createDict():
+def createDict(dataDir = 'data'):
     # Obtain file names of the data in a list
-    fileList = os.listdir('data')
+    fileList = os.listdir(dataDir)
     # Used to convert the byte entries to strings(vectorized for Numpy array) of the heads
     def b2s(b):
         return str(b,'utf-8')
@@ -19,7 +20,7 @@ def createDict():
     dataDict = {}
 
     for file in fileList:
-        fpath = os.path.join('data',file)
+        fpath = os.path.join(dataDir,file)
         name = file.rstrip('.headdata')
         dataDict.setdefault(name,[None,None])
         if 'head' in file:
@@ -37,14 +38,18 @@ def createDict():
             #             colsum = column[~np.isnan(column)].sum()
             #             colavg = colsum/np.count_nonzero(~np.isnan(column))
             #             file[i,j] = colsum
+
             imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
             file = imp.fit_transform(file)
+            mmax = MinMaxScaler()
+            file = mmax.fit_transform(file)
             dataDict[name][1] = file
     return dataDict
 
-def createDictV2():
+
+def createDictV2(dataDir = 'data'):
     # Obtain file names of the data in a list
-    fileList = os.listdir('data')
+    fileList = os.listdir(dataDir)
     # Used to convert the byte entries to strings(vectorized for Numpy array) of the heads
     def b2s(b):
         return str(b,'utf-8')
@@ -52,7 +57,7 @@ def createDictV2():
     # Creates a dictionary to be filled with {session: list(head,listofdata)} entries
     dataDict = {}
     for file in fileList:
-        fpath = os.path.join('data',file)
+        fpath = os.path.join(dataDir,file)
         # fname = file.rstrip('.headdata')
         namestring = re.findall('[0-9]+',file)[1]
         dataDict.setdefault(namestring,[None,[]])
@@ -68,6 +73,8 @@ def createDictV2():
     for k in dataDict:
         imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
         dataDict[k][1] = imp.fit_transform(dataDict[k][1])
+        mmax = MinMaxScaler()
+        dataDict[k][1] = mmax.fit_transform(dataDict[k][1])
     # Gets rid of the first two columns - dialogue and session
     for k in dataDict:
         dataDict[k][0] = dataDict[k][0][2:]
@@ -121,7 +128,7 @@ def compareV2(vector, data, width=20, seedNum=0):
     slice = dataDict[data][1][randomMid-width/2:randomMid+width/2, :]
     svd = dc.TruncatedSVD(n_components=1)
     truncated = svd.fit_transform(slice.T).T
-    return pair.pairwise_distances(vector, truncated, 'cosine')
+    return truncated, pair.pairwise_distances(vector, truncated, 'cosine')
 
 # Compares and prints out the assigned number of comparisons between the feature vector and the data(starting from assigned line)
 def multicompare(vector, data, line, number=20):
@@ -132,16 +139,16 @@ def multicompare(vector, data, line, number=20):
 def multiCompareV2(data, width=20, seedNum=0):
     print('Comparing a random portion of dialogue {data} with width {range} to the dialogue vectors \n'.format(data=data,
                                                                                                             range=width), 40*'*-')
-
     distances = []
     for v in vDict:
-        distance = float(compareV2(v, data, width, seedNum=seedNum))
-        distances.append((v,distance))
+        trunc, comp = compareV2(v, data, width, seedNum=seedNum)
+        distance = float(comp)
+        distances.append((v,distance,trunc))
         print('Dialogue {vector} distance: {distance} '.format(vector=v, distance=distance))
     minDist = max(distances,key= lambda x: x[1])
     print(44*'_','\n','Smallest distance {small} belongs to the dialogue {vector} vector'.format(small=minDist[1],vector=minDist[0]))
-
-
+    plt.scatter(vDict[minDist[0]],minDist[2])
+    plt.show()
 # Outputs the closest dialogue and session and the cosine distance in a tuple
 def predict(dialogue_session, line):
     lowest = ('x',1)
